@@ -159,52 +159,6 @@ def filter_face_48net(cls_prob, roi, pts, rectangles, width, height, threshold):
     rectangles[:, [0,2]] = np.clip(rectangles[:, [0,2]], 0, width)
     return np.array(NMS(rectangles,0.3))
 
-# pre-procession
-def pre_process(x):
-    # check dimension
-    if x.ndim == 4:
-        axis = (1, 2, 3)
-        size = x[0].size
-    elif x.ndim == 3:
-        axis = (0, 1, 2)
-        size = x.size
-    else:
-        raise ValueError('Dimension should be 3 or 4')
-
-    # normalization
-    mean = np.mean(x, axis=axis, keepdims=True)
-    std = np.std(x, axis=axis, keepdims=True)
-    std_adj = np.maximum(std, 1.0/np.sqrt(size))
-    y = (x - mean) / std_adj
-    return y
-
-# 12 normalization
-def l2_normalize(x, axis=-1, epsilon=1e-10):
-    output = x / np.sqrt(np.maximum(np.sum(np.square(x), axis=axis, keepdims=True), epsilon))
-    return output
-
-
-# calculate 128 eigenvalues
-def calc_128_vec(model,img):
-    face_img = pre_process(img)
-    pre = model.predict(face_img)
-    pre = l2_normalize(np.concatenate(pre))
-    pre = np.reshape(pre,[128])
-    return pre
-
-
-# calculate face distance
-def face_distance(face_encodings, face_to_compare):
-    # check empty situation
-    if len(face_encodings) == 0:
-        return np.empty((0))
-
-    # calculate the cosine distance
-    a_norm = np.linalg.norm(face_encodings)
-    b_norm = np.linalg.norm(face_to_compare)
-    similarity = np.dot(face_encodings, face_to_compare)/(a_norm * b_norm)
-    return similarity
-
 
 # process and save photo
 def face_process(rectangle,img):
