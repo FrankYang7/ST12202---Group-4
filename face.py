@@ -35,8 +35,12 @@ class face():
 if __name__ == "__main__":
     celery = face()
 
-    a = cv.imread("123.jpeg")
+    a = cv.imread("mask.jpg")
     a = celery.face_detect(a)
-    a = cv.cvtColor(a, cv.COLOR_BGR2RGB)
-    a = cv.cvtColor(a, cv.COLOR_RGB2HSV)
-    cv.imwrite("321.jpg",a[:,:,0])
+    a = cv.cvtColor(a, cv.COLOR_BGR2HSV)
+    cv.imwrite("mask_output.jpg",a[:,:,0])
+
+    b = cv.imread("no_mask.jpg")
+    b = celery.face_detect(b)
+    b = cv.cvtColor(b, cv.COLOR_BGR2HSV)
+    cv.imwrite("no_mask_output.jpg",b[:,:,0])
