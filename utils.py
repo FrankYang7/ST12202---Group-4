@@ -1,6 +1,8 @@
 import math
 import cv2
 import numpy as np
+from matplotlib.colors import hsv_to_rgb, rgb_to_hsv
+from PIL import Image
 
 
 # calculate the scale of each scaling of the original input image
@@ -214,3 +216,45 @@ def letterbox(image_src,dst_size):
     image_dst = cv2.copyMakeBorder(image_dst, top, down, left, right, borderType, None, value)
     
     return image_dst
+
+def rand(a=0, b=1):
+    return np.random.rand()*(b-a) + a
+
+def get_random_data(image, input_shape, jitter=.3, hue=.1, sat=1.5, val=1.5):
+    h, w = input_shape
+
+    new_ar = w/h * rand(1-jitter,1+jitter)/rand(1-jitter,1+jitter)
+    scale = rand(.7, 1.3)
+    if new_ar < 1:
+        nh = int(scale*h)
+        nw = int(nh*new_ar)
+    else:
+        nw = int(scale*w)
+        nh = int(nw/new_ar)
+    image = image.resize((nw,nh), Image.BICUBIC)
+
+    # place image
+    dx = int(rand(0, w-nw))
+    dy = int(rand(0, h-nh))
+    new_image = Image.new('RGB', (w,h), (0,0,0))
+    new_image.paste(image, (dx, dy))
+    image = new_image
+
+    # flip image or not
+    flip = rand()<.5
+    if flip: image = image.transpose(Image.FLIP_LEFT_RIGHT)
+
+    # distort image
+    hue = rand(-hue, hue)
+    sat = rand(1, sat) if rand()<.5 else 1/rand(1, sat)
+    val = rand(1, val) if rand()<.5 else 1/rand(1, val)
+    x = rgb_to_hsv(np.array(image)/255.)
+    x[..., 0] += hue
+    x[..., 0][x[..., 0]>1] -= 1
+    x[..., 0][x[..., 0]<0] += 1
+    x[..., 1] *= sat
+    x[..., 2] *= val
+    x[x>1] = 1
+    x[x<0] = 0
+    image_data = hsv_to_rgb(x)*255 # numpy array, 0 to 1
+    return image_data
